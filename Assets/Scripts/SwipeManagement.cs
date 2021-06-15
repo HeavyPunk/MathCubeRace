@@ -21,8 +21,7 @@ public class SwipeManagement : MonoBehaviour
         linesCount = 2;
 
     bool canChangeLine = false;
-
-    // Start is called before the first frame update
+    
     void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -31,25 +30,23 @@ public class SwipeManagement : MonoBehaviour
 
     void Update()
     {
+        float input = Input.GetAxis("Horizontal");
+        
         moveVector.x = playerSpeed;
         moveVector *= Time.deltaTime;
+        
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
             switch (touch.phase)
             {
-                // Record initial touch position.
                 case TouchPhase.Began:
                     startPos = touch.position;
                     directionChosen = false;
                     break;
-
-                // Determine direction by comparing the current touch position with the initial one.
                 case TouchPhase.Moved:
                     direction = touch.position - startPos;
                     break;
-
-                // Report that a direction has been chosen when the finger is lifted.
                 case TouchPhase.Ended:
                     directionChosen = true;
                     break;
@@ -64,7 +61,21 @@ public class SwipeManagement : MonoBehaviour
                 lineNumber = Mathf.Clamp(lineNumber, 0, linesCount);
             }
         }
-        else canChangeLine = false;
+        else
+        {
+            canChangeLine = false;
+        }
+        
+        if (Mathf.Abs(input) > .1f)
+        {
+            direction = new Vector2(input, 0);
+            directionChosen = true;
+        }
+        else
+        {
+            directionChosen = false;
+            canChangeLine = false;
+        }
         characterController.Move(moveVector);
 
         Vector3 newPosition = transform.position;

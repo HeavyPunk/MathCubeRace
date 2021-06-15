@@ -65,8 +65,8 @@ public class RoadSpawner : MonoBehaviour
         GameObject blockCityRight = Instantiate(CityBlockPrefabs[Random.Range(0, CityBlockPrefabs.Length)], transform);
         GameObject blockCityLeft = Instantiate(CityBlockPrefabs[Random.Range(0, CityBlockPrefabs.Length)], transform);
         blockCityXPos += blockCityLength;
-        blockCityRight.transform.position = new Vector3(blockCityXPos, 0, -0.28f);
-        blockCityLeft.transform.position = new Vector3(blockCityXPos, 0, 8.7f);
+        blockCityRight.transform.position = new Vector3(blockCityXPos, -4, -2.3f);
+        blockCityLeft.transform.position = new Vector3(blockCityXPos, -4, 6.3f);
         CurrentBlocksCityRight.Add(blockCityRight);
         CurrentBlocksCityLeft.Add(blockCityLeft);
     }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -13,7 +14,8 @@ public class MainMenu : MonoBehaviour
 
     void Start()
     {
-        //PlayerPrefs.DeleteAll();
+        DifficultySettings.FirstCheckDifficulty();
+        MathActions.FirstCheckOperators();
         totalScore = PlayerPrefs.GetInt("TotalScore");
         totalScore += PlayerPrefs.GetInt("LastScore");
         PlayerPrefs.SetInt("LastScore", 0);
@@ -35,5 +37,11 @@ public class MainMenu : MonoBehaviour
     public void OnPlayButton()
     {
         SceneManager.LoadScene(1);
+    }
+
+    public void OnApplicationPause(bool pauseStatus)
+    {
+        // Notifications.SendNotificationNews();
+        // Notifications.SendNotificationRecord();
     }
 }

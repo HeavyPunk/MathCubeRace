@@ -14,15 +14,9 @@ public class MusicManager : MonoBehaviour
     private void Start()
     {
         isMusicOn = PlayerPrefs.GetInt("isMusicOn") == 1;
-        Debug.Log("MusicStart");
         ChangeColor();
     }
-
-    private void Update()
-    {
-        
-    }
-
+    
     public void ChangeColor()
     {
         if (isMusicOn)

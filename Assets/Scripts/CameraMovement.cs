@@ -8,24 +8,22 @@ public class CameraMovement : MonoBehaviour
 
     Vector3 startDistance,
             moveVector;
-
-    // Start is called before the first frame update
+    
     void Start()
     {
         startDistance = transform.position - target.position;
-        if (PlayerPrefs.GetString("SwipeMode").Equals("On"))
-        {
-            target.GetComponent<PlayerMovement>().enabled = false;
-            target.GetComponent<SwipeManagement>().enabled = true;
-        }
-        else if (PlayerPrefs.GetString("SwipeMode").Equals("Off"))
-        {
-            target.GetComponent<PlayerMovement>().enabled = true;
-            target.GetComponent<SwipeManagement>().enabled = false;
-        }
+        // if (PlayerPrefs.GetString("SwipeMode").Equals("On"))
+        // {
+        //     target.GetComponent<PlayerMovement>().enabled = false;
+        //     target.GetComponent<SwipeManagement>().enabled = true;
+        // }
+        // else if (PlayerPrefs.GetString("SwipeMode").Equals("Off"))
+        // {
+        //     target.GetComponent<PlayerMovement>().enabled = true;
+        //     target.GetComponent<SwipeManagement>().enabled = false;
+        // }
     }
-
-    // Update is called once per frame
+    
     void Update()
     {
         moveVector = target.position + startDistance;

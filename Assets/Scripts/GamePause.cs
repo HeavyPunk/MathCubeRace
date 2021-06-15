@@ -10,7 +10,6 @@ public class GamePause : MonoBehaviour
     
     private bool _isPause = false;
     
-    // Start is called before the first frame update
     public void OnResumeButton()
     {
         _isPause = false;

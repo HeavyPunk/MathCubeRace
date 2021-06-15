@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 using Random = System.Random;
 
@@ -9,6 +12,7 @@ namespace RandomTaskGenerator
         private readonly char[] _operations;
         private double _doubleDelta = 1e-10;
         private Difficulty Difficulty { get; }
+        private HashSet<char> PossibleOperators { get; }
         private int DifficultMaxNumber { get; } = 200;
         private int SimpleMaxNumber { get; } = 20;
         private int LongMaxOperandLenght { get; } = 4;
@@ -16,36 +20,33 @@ namespace RandomTaskGenerator
         private const int DifficultMaxAnswer = 200;
         private const int SimpleMaxAnswer = 50;
 
-        public Generator(Difficulty difficulty)
+        public Generator(Difficulty difficulty, HashSet<char> possibleOperators)
         {
             Difficulty = difficulty;
-            _operations = new[] {'+', '-', 'x', '/'};
+            PossibleOperators = possibleOperators;
         }
 
         public (string, string) GenerateNewTask(Random numberGenerator)
         {
-            var (maxNumber, maxOperandCount, maxAnswer) = GetOptionsFromRules();
+            var (maxNumber, _, maxAnswer) = GetOptionsFromRules();
 
-            var operationNum = numberGenerator.Next(0, _operations.Length);
-            var result = GenerateOneTask(_operations[operationNum], maxNumber, maxAnswer, numberGenerator);
+            var operationNum = numberGenerator.Next(0, PossibleOperators.Count);
+
+            var (stringBuilder, item2) = GenerateOneTask(PossibleOperators.ElementAt(operationNum), maxNumber, maxAnswer, numberGenerator);
             
-            return (result.Item1.ToString(), result.Item2);
+            return (stringBuilder, item2);
         }
 
-        private (StringBuilder, string) GenerateOneTask(char @operator, int maxNumber, int maxAnswer, Random numberGenerator)
+        private (string, string) GenerateOneTask(char @operator, int maxNumber, int maxAnswer, Random numberGenerator)
         {
             var (firstOperand, secondOperand, operationResult) = GetOperandsAndResult(1, maxNumber, @operator, numberGenerator);
             
-            while (operationResult - Math.Floor(operationResult) > _doubleDelta || operationResult > maxAnswer || operationResult < 0)
+            while (operationResult - Math.Floor(operationResult) > _doubleDelta || operationResult > maxAnswer || operationResult <= 0)
             {
                 (firstOperand, secondOperand, operationResult) = GetOperandsAndResult(1, maxNumber, @operator, numberGenerator);
             }
 
-            var result = new StringBuilder();
-            result.Append(firstOperand);
-            result.Append(@operator);
-            result.Append(secondOperand);
-            return (result, operationResult.ToString());
+            return ($"{firstOperand}{@operator}{secondOperand}", operationResult.ToString(CultureInfo.InvariantCulture));
         }
 
         private (int, int, double) GetOperandsAndResult(int minNumber, int maxNumber, char @operator, Random numberGenerator)
@@ -66,7 +67,7 @@ namespace RandomTaskGenerator
                     return firstOperand - secondOperand;
                 case 'x':
                     return firstOperand * secondOperand;
-                case '/':
+                case '÷':
                     return secondOperand == 0 ? 1e10 : (double) firstOperand / secondOperand;
                 default:
                     throw new Exception("No match operator: " + @operator);

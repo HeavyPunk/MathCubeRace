@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Threading;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,13 +11,12 @@ namespace RandomTaskGenerator
 {
     public class TaskShower : MonoBehaviour
     {
-        struct AnswerBlock
+        private struct AnswerBlock
         {
-            public string Name { set; get; }
             public Text AnswerVariant { set; get; }
         }
 
-        public float _distanceToNextTask = 30;
+        public float distanceToNextTask = 30;
         public int playerLivesCount;
         public int adsCooldownInSecs;
         public GameObject firstLosePanel;
@@ -28,53 +25,52 @@ namespace RandomTaskGenerator
         public GameObject scoreAmount;
         public GameObject adsDoubleScoreImage;
         public GameObject doubleScoreText;
-
+        public char[] actions = new char[4];
         private Generator _generator;
         
         private Text _leftAnswerText;
         private Text _centerAnswerText;
         private Text _rightAnswerText;
         private GameObject _answerContainer;
+        private string _rightAnswer;
         private GameObject _taskPanel;
         private Image _adsTimerAmount;
         private Text _taskText;
         private Text _playerLivesCountText;
         private bool _swipeMode;
-        private bool isAdsCooldown;
-        private float _fillAmount = 0;
-        private int _correctBlockNum;
-        private int _score = 0;
+        private bool _isAdsCooldown;
+        private int _score;
         private bool _toGetNewTask = true;
+
+        private Difficulty[] _standardDifficulties = 
+        {
+            new Difficulty {DifficultAnswer = false, LargeNumbers = false, LongTasks = false},
+            new Difficulty {DifficultAnswer = true, LargeNumbers = false, LongTasks = true},
+            new Difficulty {DifficultAnswer = true, LargeNumbers = true, LongTasks = true}
+        };
         private readonly ConcurrentQueue<(string, string)> _taskQueue = new ConcurrentQueue<(string, string)>(); 
         private readonly AnswerBlock[] _answerBlocks =
         {
-            new AnswerBlock
-            {
-                Name = "LeftAnswerBlock"
-            },
-            new AnswerBlock
-            {
-                Name = "CenterAnswerBlock"
-            },
-            new AnswerBlock
-            {
-                Name = "RightAnswerBlock"
-            }
+            new AnswerBlock(),
+            new AnswerBlock(),
+            new AnswerBlock()
         };
 
         void Start()
         {
-            var difficulty = new Difficulty
-            {
-                DifficultAnswer = true,
-                LargeNumbers = true,
-                LongTasks = true
-            };
-            _generator = new Generator(difficulty);
+            actions[0] = PlayerPrefs.GetString("OperatorPlus", "0")[0];
+            actions[1] = PlayerPrefs.GetString("OperatorMinus", "0")[0];
+            actions[2] = PlayerPrefs.GetString("OperatorMultiply", "0")[0];
+            actions[3] = PlayerPrefs.GetString("OperatorDivide", "0")[0];
+            
+            _generator = new Generator(
+                _standardDifficulties[GetDifficulty(PlayerPrefs.GetString("CurrentDifficulty"))],
+                SetPossibleActionsHashSet(actions)
+            );
 
             FindAllObjects();
             
-            isAdsCooldown = true;
+            _isAdsCooldown = true;
             _adsTimerAmount.fillAmount = 1;
             
             PlayerPrefs.SetInt("RightAnswerCount", _score);
@@ -90,15 +86,16 @@ namespace RandomTaskGenerator
                 var mainRandomGenerator = new Random();
                 _taskText.text = task.Item1;
                 _playerLivesCountText.text = playerLivesCount.ToString();
-                _correctBlockNum = new Random().Next(0, 3);
+                var correctBlockNum = new Random().Next(0, 3);
 
-                _answerBlocks[_correctBlockNum].AnswerVariant.text = task.Item2;
+                _answerBlocks[correctBlockNum].AnswerVariant.text = task.Item2;
+                _rightAnswer = task.Item2;
                 for (var i = 0; i < _answerBlocks.Length; i++)
                 {
-                    if (i == _correctBlockNum)
+                    if (i == correctBlockNum)
                         continue;
-                    _answerBlocks[i].AnswerVariant.text =
-                        GetRandomAnswerVariant(task.Item2, 30, mainRandomGenerator);
+                    var nextVariant = GetRandomAnswerVariant(task.Item2, 30, mainRandomGenerator);
+                    _answerBlocks[i].AnswerVariant.text = nextVariant;
                 }
                 _toGetNewTask = false;
             }
@@ -106,7 +103,7 @@ namespace RandomTaskGenerator
             if (playerLivesCount == 0)
             {
                 _playerLivesCountText.text = playerLivesCount.ToString();
-                if (isAdsCooldown)
+                if (_isAdsCooldown)
                 {
                     _adsTimerAmount.fillAmount -= 1 / (adsCooldownInSecs - 0.5f) * Time.deltaTime;
                     if (_adsTimerAmount.fillAmount <= 0)
@@ -124,7 +121,7 @@ namespace RandomTaskGenerator
                         adsDoubleScoreImage.SetActive(true);
                         doubleScoreText.SetActive(true);
 
-                        isAdsCooldown = false;
+                        _isAdsCooldown = false;
                     }
                 }
             }
@@ -133,17 +130,18 @@ namespace RandomTaskGenerator
         private void OnCollisionEnter(Collision other)
         {
             //На релизе убрать PlayerMovement, оставить ТОЛЬКО SwipeManagement
-            Debug.Log("Collision object: " + other.gameObject.name + ":" +  _answerBlocks[_correctBlockNum].Name);
-            if (!other.gameObject.name.Equals(_answerBlocks[_correctBlockNum].Name))
+            Debug.Log($"Collision object: {other.gameObject.name} Right answer is {_rightAnswer}");
+            var otherAnswerVariant = other.transform.GetChild(0).GetChild(0).GetComponent<Text>().text;
+            if (!otherAnswerVariant.Equals(_rightAnswer))
             {
                 if (playerLivesCount == 1)
                 {
                     AudioListener.pause = true;
                     //DebugCode
-                    if (_swipeMode)
-                        transform.GetComponent<SwipeManagement>().playerSpeed = 0;
-                    else
-                        transform.GetComponent<PlayerMovement>().playerSpeed = 0;
+                    // if (_swipeMode)
+                    //     transform.GetComponent<SwipeManagement>().playerSpeed = 0;
+                    // else
+                    //     transform.GetComponent<PlayerMovement>().playerSpeed = 0;
                     //DebugCode
                     _playerLivesCountText.text = playerLivesCount.ToString();
                     _taskPanel.SetActive(false);
@@ -155,12 +153,12 @@ namespace RandomTaskGenerator
 
                 playerLivesCount--;
             }
-
-            if (other.gameObject.name.Equals(_answerBlocks[_correctBlockNum].Name))
+            else
                 _score += 1;
+            
             PlayerPrefs.SetInt("RightAnswerCount", _score);
             _toGetNewTask = true;
-            _answerContainer.transform.Translate(new Vector3(_distanceToNextTask, 0, 0));
+            _answerContainer.transform.Translate(new Vector3(distanceToNextTask, 0, 0));
         }
         
         public void RestartGame()
@@ -205,6 +203,39 @@ namespace RandomTaskGenerator
                 var primer = _generator.GenerateNewTask(numberGenerator);
                 _taskQueue.Enqueue(primer);
             }
+        }
+
+        private HashSet<char> SetPossibleActionsHashSet(char[] actions)
+        {
+            HashSet<char> possibleActions = new HashSet<char>();
+
+            foreach (var action in actions)
+            {
+                if (action.Equals('0') == false)
+                {
+                    possibleActions.Add(action);
+                }
+            }
+            
+            return possibleActions;
+        }
+
+        private int GetDifficulty(string currentDifficulty)
+        {
+            int result = -1;
+            switch (currentDifficulty)
+            {
+                case "Легко":
+                    result = 0;
+                    break;
+                case "Нормально":
+                    result = 1;
+                    break;
+                case "Тяжело":
+                    result = 2;
+                    break;
+            }
+            return result;
         }
         #endregion
     }

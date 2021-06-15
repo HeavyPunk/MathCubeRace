@@ -18,16 +18,13 @@ public class PlayerMovement : MonoBehaviour
         linesCount = 2;
 
     bool canChangeLine = false;
-
-
-    // Start is called before the first frame update
+    
     void Start()
     {
         characterController = GetComponent<CharacterController>();
         moveVector = new Vector3(1, 0, 0);
     }
-
-    // Update is called once per frame
+    
     void Update()
     {
         moveVector.x = playerSpeed;
@@ -45,7 +42,10 @@ public class PlayerMovement : MonoBehaviour
             }
         }
         else
+        {
             canChangeLine = false;
+        }
+
         characterController.Move(moveVector);
 
         Vector3 newPosition = transform.position;

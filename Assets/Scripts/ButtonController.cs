@@ -1,16 +1,25 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class Shop : MonoBehaviour
+public class ButtonController : MonoBehaviour
 {
-    public void OpenShop()
+    public GameObject player;
+    public void Open()
     {
         gameObject.SetActive(true);
+
+        if (gameObject.transform.name.Equals("BookHolder"))
+        {
+            player.SetActive(false);
+            gameObject.transform.GetChild(0).GetChild(1).GetComponent<Scrollbar>().value = -3f;
+        }
     }
 
-    public void CloseShop()
+    public void Close()
     {
+        player.SetActive(true);
         gameObject.SetActive(false);
     }
 }

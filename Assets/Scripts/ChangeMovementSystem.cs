@@ -7,13 +7,11 @@ public class ChangeMovementSystem : MonoBehaviour
 {
     public Toggle toggle;
     
-    // Start is called before the first frame update
     void Start()
     {
         toggle.isOn = PlayerPrefs.GetString("SwipeMode").Equals("On");
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (toggle.isOn)
